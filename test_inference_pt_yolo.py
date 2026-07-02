@@ -15,11 +15,13 @@ def test_inference_pt_yolo():
     img=Image.open(img_path)
 
     yolov8_output = yolov8_model(img, conf=0.1)[0]
+    
+    yolov8_output.save(filename="artifacts/inference/test_pretrained_yolo.jpg")
 
     annotated_img_bgr = yolov8_output.plot()
     # Конвертируем в RGB для matplotlib
     annotated_img_rgb = cv2.cvtColor(annotated_img_bgr, cv2.COLOR_BGR2RGB)
-
+    
     plt.figure(figsize=(10, 10))
     plt.imshow(annotated_img_rgb)
     plt.axis("off")

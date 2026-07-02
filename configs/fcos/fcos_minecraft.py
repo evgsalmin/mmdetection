@@ -102,12 +102,13 @@ test_cfg = dict(type='TestLoop')
 default_hooks = dict(
     checkpoint=dict(
         type='CheckpointHook', 
-        interval=1,            # Проверять каждую эпоху
-        max_keep_ckpts=3,      # Хранить не более 3 последних обычных чекпоинтов
-        save_best='bbox_mAP',  # Автоматически сохранить веса с наилучшим mAP (Исправлено)
-        rule='greater'         # Правило: чем больше метрика, тем лучше
+        interval=1,                # Проверять каждую эпоху
+        max_keep_ckpts=3,          # Хранить не более 3 последних обычных чекпоинтов
+        #save_best='coco/bbox_mAP', # 👈 В v3.x пишется key_indicator вместо save_best и с префиксом coco/
+        rule='greater'             # Правило: чем больше метрика, тем лучше
     ),
     logger=dict(type='LoggerHook', interval=50)
 )
 
-#work_dir = './my_minecraft_experiments/fcos_v1'
+
+work_dir = 'artifacts/fcos'
