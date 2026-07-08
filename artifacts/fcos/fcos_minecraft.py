@@ -1,23 +1,142 @@
 auto_scale_lr = dict(base_batch_size=16, enable=False)
 backend_args = None
 data_root = 'datasets/minecraft/'
-dataset_type = 'CocoMinecraftDataset'
+dataset_type = 'CocoDataset'
 default_hooks = dict(
     checkpoint=dict(
-        interval=1, max_keep_ckpts=3, rule='greater', type='CheckpointHook'),
+        interval=1,
+        max_keep_ckpts=3,
+        rule='greater',
+        save_best='coco/bbox_mAP',
+        type='CheckpointHook'),
     logger=dict(interval=50, type='LoggerHook'),
     param_scheduler=dict(type='ParamSchedulerHook'),
     sampler_seed=dict(type='DistSamplerSeedHook'),
     timer=dict(type='IterTimerHook'),
-    visualization=dict(type='DetVisualizationHook'))
+    visualization=dict(
+        test_out_dir='artifacts/inference/fcos', type='DetVisualizationHook'))
 default_scope = 'mmdet'
 env_cfg = dict(
     cudnn_benchmark=False,
     dist_cfg=dict(backend='nccl'),
     mp_cfg=dict(mp_start_method='fork', opencv_num_threads=0))
-load_from = None
+launcher = 'none'
+load_from = 'artifacts/fcos/best_coco_bbox_mAP_epoch_11.pth'
 log_level = 'INFO'
 log_processor = dict(by_epoch=True, type='LogProcessor', window_size=50)
+metainfo = dict(
+    classes=(
+        'minecraft-mobs',
+        'bee',
+        'chicken',
+        'cow',
+        'creeper',
+        'enderman',
+        'fox',
+        'frog',
+        'ghast',
+        'goat',
+        'llama',
+        'pig',
+        'sheep',
+        'skeleton',
+        'spider',
+        'turtle',
+        'wolf',
+        'zombie',
+    ),
+    palette=[
+        (
+            220,
+            20,
+            60,
+        ),
+        (
+            220,
+            20,
+            60,
+        ),
+        (
+            119,
+            11,
+            32,
+        ),
+        (
+            0,
+            0,
+            142,
+        ),
+        (
+            0,
+            0,
+            230,
+        ),
+        (
+            106,
+            0,
+            228,
+        ),
+        (
+            0,
+            60,
+            100,
+        ),
+        (
+            0,
+            80,
+            100,
+        ),
+        (
+            0,
+            0,
+            70,
+        ),
+        (
+            0,
+            0,
+            192,
+        ),
+        (
+            250,
+            170,
+            30,
+        ),
+        (
+            100,
+            170,
+            30,
+        ),
+        (
+            220,
+            220,
+            0,
+        ),
+        (
+            175,
+            116,
+            175,
+        ),
+        (
+            250,
+            0,
+            30,
+        ),
+        (
+            165,
+            42,
+            42,
+        ),
+        (
+            255,
+            77,
+            255,
+        ),
+        (
+            0,
+            226,
+            252,
+        ),
+    ])
 model = dict(
     backbone=dict(
         depth=50,
@@ -94,9 +213,10 @@ model = dict(
     type='FCOS')
 optim_wrapper = dict(
     clip_grad=dict(max_norm=35, norm_type=2),
-    optimizer=dict(lr=0.01, momentum=0.9, type='SGD', weight_decay=0.0001),
+    loss_scale='dynamic',
+    optimizer=dict(lr=0.00125, momentum=0.9, type='SGD', weight_decay=0.0001),
     paramwise_cfg=dict(bias_decay_mult=0.0, bias_lr_mult=2.0),
-    type='OptimWrapper')
+    type='AmpOptimWrapper')
 param_scheduler = [
     dict(
         begin=0,
@@ -122,13 +242,126 @@ test_dataloader = dict(
     dataset=dict(
         ann_file='annotations/test_annotations.json',
         backend_args=None,
-        data_prefix=dict(img='test'),
+        data_prefix=dict(img='test/'),
         data_root='datasets/minecraft/',
+        metainfo=dict(
+            classes=(
+                'minecraft-mobs',
+                'bee',
+                'chicken',
+                'cow',
+                'creeper',
+                'enderman',
+                'fox',
+                'frog',
+                'ghast',
+                'goat',
+                'llama',
+                'pig',
+                'sheep',
+                'skeleton',
+                'spider',
+                'turtle',
+                'wolf',
+                'zombie',
+            ),
+            palette=[
+                (
+                    220,
+                    20,
+                    60,
+                ),
+                (
+                    220,
+                    20,
+                    60,
+                ),
+                (
+                    119,
+                    11,
+                    32,
+                ),
+                (
+                    0,
+                    0,
+                    142,
+                ),
+                (
+                    0,
+                    0,
+                    230,
+                ),
+                (
+                    106,
+                    0,
+                    228,
+                ),
+                (
+                    0,
+                    60,
+                    100,
+                ),
+                (
+                    0,
+                    80,
+                    100,
+                ),
+                (
+                    0,
+                    0,
+                    70,
+                ),
+                (
+                    0,
+                    0,
+                    192,
+                ),
+                (
+                    250,
+                    170,
+                    30,
+                ),
+                (
+                    100,
+                    170,
+                    30,
+                ),
+                (
+                    220,
+                    220,
+                    0,
+                ),
+                (
+                    175,
+                    116,
+                    175,
+                ),
+                (
+                    250,
+                    0,
+                    30,
+                ),
+                (
+                    165,
+                    42,
+                    42,
+                ),
+                (
+                    255,
+                    77,
+                    255,
+                ),
+                (
+                    0,
+                    226,
+                    252,
+                ),
+            ]),
         pipeline=[
             dict(backend_args=None, type='LoadImageFromFile'),
             dict(keep_ratio=True, scale=(
-                1333,
-                800,
+                512,
+                512,
             ), type='Resize'),
             dict(type='LoadAnnotations', with_bbox=True),
             dict(
@@ -142,7 +375,7 @@ test_dataloader = dict(
                 type='PackDetInputs'),
         ],
         test_mode=True,
-        type='CocoMinecraftDataset'),
+        type='CocoDataset'),
     drop_last=False,
     num_workers=2,
     persistent_workers=True,
@@ -170,16 +403,129 @@ test_pipeline = [
         ),
         type='PackDetInputs'),
 ]
-train_cfg = dict(max_epochs=1, type='EpochBasedTrainLoop', val_interval=1)
+train_cfg = dict(max_epochs=12, type='EpochBasedTrainLoop', val_interval=1)
 train_dataloader = dict(
     batch_sampler=dict(type='AspectRatioBatchSampler'),
     batch_size=2,
     dataset=dict(
-        ann_file='annotations/test_annotations.json',
+        ann_file='annotations/train_annotations.json',
         backend_args=None,
-        data_prefix=dict(img='test/'),
+        data_prefix=dict(img='train/'),
         data_root='datasets/minecraft/',
         filter_cfg=dict(filter_empty_gt=True, min_size=32),
+        metainfo=dict(
+            classes=(
+                'minecraft-mobs',
+                'bee',
+                'chicken',
+                'cow',
+                'creeper',
+                'enderman',
+                'fox',
+                'frog',
+                'ghast',
+                'goat',
+                'llama',
+                'pig',
+                'sheep',
+                'skeleton',
+                'spider',
+                'turtle',
+                'wolf',
+                'zombie',
+            ),
+            palette=[
+                (
+                    220,
+                    20,
+                    60,
+                ),
+                (
+                    220,
+                    20,
+                    60,
+                ),
+                (
+                    119,
+                    11,
+                    32,
+                ),
+                (
+                    0,
+                    0,
+                    142,
+                ),
+                (
+                    0,
+                    0,
+                    230,
+                ),
+                (
+                    106,
+                    0,
+                    228,
+                ),
+                (
+                    0,
+                    60,
+                    100,
+                ),
+                (
+                    0,
+                    80,
+                    100,
+                ),
+                (
+                    0,
+                    0,
+                    70,
+                ),
+                (
+                    0,
+                    0,
+                    192,
+                ),
+                (
+                    250,
+                    170,
+                    30,
+                ),
+                (
+                    100,
+                    170,
+                    30,
+                ),
+                (
+                    220,
+                    220,
+                    0,
+                ),
+                (
+                    175,
+                    116,
+                    175,
+                ),
+                (
+                    250,
+                    0,
+                    30,
+                ),
+                (
+                    165,
+                    42,
+                    42,
+                ),
+                (
+                    255,
+                    77,
+                    255,
+                ),
+                (
+                    0,
+                    226,
+                    252,
+                ),
+            ]),
         pipeline=[
             dict(backend_args=None, type='LoadImageFromFile'),
             dict(type='LoadAnnotations', with_bbox=True),
@@ -202,7 +548,7 @@ train_dataloader = dict(
                 type='PhotoMetricDistortion'),
             dict(type='PackDetInputs'),
         ],
-        type='CocoMinecraftDataset'),
+        type='CocoDataset'),
     num_workers=2,
     persistent_workers=True,
     sampler=dict(shuffle=True, type='DefaultSampler'))
@@ -236,6 +582,119 @@ val_dataloader = dict(
         backend_args=None,
         data_prefix=dict(img='valid/'),
         data_root='datasets/minecraft/',
+        metainfo=dict(
+            classes=(
+                'minecraft-mobs',
+                'bee',
+                'chicken',
+                'cow',
+                'creeper',
+                'enderman',
+                'fox',
+                'frog',
+                'ghast',
+                'goat',
+                'llama',
+                'pig',
+                'sheep',
+                'skeleton',
+                'spider',
+                'turtle',
+                'wolf',
+                'zombie',
+            ),
+            palette=[
+                (
+                    220,
+                    20,
+                    60,
+                ),
+                (
+                    220,
+                    20,
+                    60,
+                ),
+                (
+                    119,
+                    11,
+                    32,
+                ),
+                (
+                    0,
+                    0,
+                    142,
+                ),
+                (
+                    0,
+                    0,
+                    230,
+                ),
+                (
+                    106,
+                    0,
+                    228,
+                ),
+                (
+                    0,
+                    60,
+                    100,
+                ),
+                (
+                    0,
+                    80,
+                    100,
+                ),
+                (
+                    0,
+                    0,
+                    70,
+                ),
+                (
+                    0,
+                    0,
+                    192,
+                ),
+                (
+                    250,
+                    170,
+                    30,
+                ),
+                (
+                    100,
+                    170,
+                    30,
+                ),
+                (
+                    220,
+                    220,
+                    0,
+                ),
+                (
+                    175,
+                    116,
+                    175,
+                ),
+                (
+                    250,
+                    0,
+                    30,
+                ),
+                (
+                    165,
+                    42,
+                    42,
+                ),
+                (
+                    255,
+                    77,
+                    255,
+                ),
+                (
+                    0,
+                    226,
+                    252,
+                ),
+            ]),
         pipeline=[
             dict(backend_args=None, type='LoadImageFromFile'),
             dict(keep_ratio=True, scale=(
@@ -254,7 +713,7 @@ val_dataloader = dict(
                 type='PackDetInputs'),
         ],
         test_mode=True,
-        type='CocoMinecraftDataset'),
+        type='CocoDataset'),
     drop_last=False,
     num_workers=2,
     persistent_workers=True,
