@@ -39,6 +39,8 @@ def viz_yolo():
         axes[1].legend()
         axes[1].grid(True)
 
+        plt.savefig('artifacts/yolo/graph.jpg', dpi=300, bbox_inches="tight")
+
         plt.tight_layout()
         plt.show()
     else:

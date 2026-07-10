@@ -87,5 +87,7 @@ def viz_fcos():
         msg = f"Данные mAP не найдены.\nДоступные колонки:\n{list(df.columns)[:5]}..."
         axes[1].text(0.5, 0.5, msg, ha="center", va="center", fontsize=10)
 
+    plt.savefig('artifacts/fcos/graph.jpg', dpi=300, bbox_inches="tight")
+
     plt.tight_layout()
     plt.show()
